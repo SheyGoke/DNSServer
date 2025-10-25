@@ -76,8 +76,38 @@ dns_records = {
             86400, #minimum
         ),
     },
-   
-    # Add more records as needed (see assignment instructions!
+    'nyu.edu.': {
+        dns.rdatatype.A: '128.122.138.1',
+        dns.rdatatype.AAAA: '2607:f470:8:1000::1',
+        dns.rdatatype.MX: [(10, 'mx.nyu.edu.')],
+        dns.rdatatype.NS: 'ns.nyu.edu.',
+        dns.rdatatype.TXT: ('oa2584@nyu.edu',),
+        dns.rdatatype.SOA: (
+            'ns.nyu.edu.',
+            'hostmaster.nyu.edu.',
+            2023102401,
+            3600,
+            1800,
+            604800,
+            86400,
+        ),
+    },
+    'safebank.com.': {
+        dns.rdatatype.A: '10.10.10.10',
+        dns.rdatatype.NS: 'ns.safebank.com.',
+        dns.rdatatype.MX: [(10, 'mail.safebank.com.')],
+        dns.rdatatype.TXT: ('SafeBank TXT record',),
+        dns.rdatatype.SOA: (
+            'ns.safebank.com.',
+            'admin.safebank.com.',
+            2023102401,
+            3600,
+            1800,
+            604800,
+            86400,
+        ),
+    },
+    # Add more records as needed
 }
 
 def run_dns_server():
