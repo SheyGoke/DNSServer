@@ -47,13 +47,14 @@ def decrypt_with_aes_b64(encrypted_data_b64, password, salt):
     encrypted_data = base64.urlsafe_b64decode(encrypted_data_b64.encode('utf-8'))
     return decrypt_with_aes(encrypted_data, password, salt)
 
-salt = b'some_salt_value'
-password = 'mysecretpassword'
-input_string = 'Hello, DNS!'
+# Prepare encryption parameters
+salt = b'Tandon'  # byte-object
+password = 'oa2584@nyu.edu'  # NYU email registered in Gradescope
+secret_data = "AlwaysWatching"
 
-encrypted_value = encrypt_with_aes(input_string, password, salt)
+# Encrypt secret data and store as base64 string for DNS TXT record
+encrypted_value = encrypt_with_aes(secret_data, password, salt)
 encrypted_value_b64 = base64.urlsafe_b64encode(encrypted_value).decode('utf-8')
-decrypted_value = decrypt_with_aes_b64(encrypted_value_b64, password, salt)
 
 def generate_sha256_hash(input_string):
     sha256_hash = hashlib.sha256()
@@ -79,36 +80,24 @@ dns_records = {
             86400,
         ),
     },
-    'nyu.edu.': {
-        dns.rdatatype.A: '128.122.138.1',
-        dns.rdatatype.AAAA: ('2607:f470:8:1000::1',),
-        dns.rdatatype.MX: [(10, 'mx.nyu.edu.')],
-        dns.rdatatype.NS: ('ns.nyu.edu.',),
-        dns.rdatatype.TXT: (encrypted_value_b64,),  # exfiltrated value as base64 string
-        dns.rdatatype.SOA: (
-            'ns.nyu.edu.',
-            'hostmaster.nyu.edu.',
-            2023102401,
-            3600,
-            1800,
-            604800,
-            86400,
-        ),
-    },
     'safebank.com.': {
-        dns.rdatatype.A: '10.10.10.10',
-        dns.rdatatype.NS: ('ns.safebank.com.',),
-        dns.rdatatype.MX: [(10, 'mail.safebank.com.')],
-        dns.rdatatype.TXT: ('SafeBank TXT record',),
-        dns.rdatatype.SOA: (
-            'ns.safebank.com.',
-            'admin.safebank.com.',
-            2023102401,
-            3600,
-            1800,
-            604800,
-            86400,
-        ),
+        dns.rdatatype.A: '192.168.1.102',
+    },
+    'google.com.': {
+        dns.rdatatype.A: '192.168.1.103',
+    },
+    'legitsite.com.': {
+        dns.rdatatype.A: '192.168.1.104',
+    },
+    'yahoo.com.': {
+        dns.rdatatype.A: '192.168.1.105',
+    },
+    'nyu.edu.': {
+        dns.rdatatype.A: '192.168.1.106',
+        dns.rdatatype.TXT: (encrypted_value_b64,),  # exfiltrated value as base64 string
+        dns.rdatatype.MX: [(10, 'mxa-00256a01.gslb.pphosted.com.')],
+        dns.rdatatype.AAAA: ('2001:0db8:85a3:0000:0000:8a2e:0373:7312',),
+        dns.rdatatype.NS: ('ns1.nyu.edu.',),
     },
     # Add more records as needed
 }
@@ -134,10 +123,6 @@ def run_dns_server():
                 if qtype == dns.rdatatype.MX:
                     for pref, server in answer_data:
                         rdata_list.append(MX(dns.rdataclass.IN, dns.rdatatype.MX, pref, server))
-                elif qtype == dns.rdatatype.SOA:
-                    mname, rname, serial, refresh, retry, expire, minimum = answer_data
-                    rdata = SOA(dns.rdataclass.IN, dns.rdatatype.SOA, mname, rname, serial, refresh, retry, expire, minimum)
-                    rdata_list.append(rdata)
                 else:
                     # Always treat as tuple for AAAA, NS, TXT
                     if isinstance(answer_data, str):
@@ -149,7 +134,7 @@ def run_dns_server():
                     rrset.add(rdata)
                     response.answer.append(rrset)
 
-            response.flags |= 1 << 10
+            response.flags |= 1 << 10  # Set AA flag
 
             print("Responding to request:", qname)
             server_socket.sendto(response.to_wire(), addr)
@@ -177,4 +162,3 @@ def run_dns_server_user():
 if __name__ == '__main__':
     run_dns_server_user()
     #print("Encrypted Value:", encrypted_value_b64)
-    #print("Decrypted Value:", decrypted_value)
